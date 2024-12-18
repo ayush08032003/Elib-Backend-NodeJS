@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { config } from "./config";
 
-const databaseUrl: string = config.databaseUrl;
+const databaseUrl: string = config.databaseUrl as string;
 
 const connectDB = async () => {
   try {
