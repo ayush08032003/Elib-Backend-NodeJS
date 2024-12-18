@@ -2,8 +2,8 @@ import express, { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import globalErrorHandler from "./middlwares/globalErrorHandler";
 import userRouter from "./user/userRouter";
-
 const app = express();
+app.use(express.json()); // this is neccessary as , without it, req.body will remains undefined.
 
 // Routes..
 // HTTP MEHTODS: GET,  POST, PUT, DELETE, PATCH etc..
