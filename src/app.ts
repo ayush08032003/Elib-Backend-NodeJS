@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import globalErrorHandler from "./middlwares/globalErrorHandler";
 import userRouter from "./user/userRouter";
+import bookRouter from "./book/bookRouter";
 const app = express();
 app.use(express.json()); // this is neccessary as , without it, req.body will remains undefined.
 
@@ -18,6 +19,7 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/api/users", userRouter);
+app.use("/api/books", bookRouter);
 
 // Global Error Handler.
 app.use(globalErrorHandler);
