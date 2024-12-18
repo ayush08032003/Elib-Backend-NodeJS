@@ -5,7 +5,10 @@ const bookRegister = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.json({ message: "Book Registered Successfully" });
+
+    
+
+//   res.json({ message: "Book Registered Successfully" });
 };
 
 export { bookRegister };
