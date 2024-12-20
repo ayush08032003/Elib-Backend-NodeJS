@@ -41,7 +41,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   });
 
   // Token Generation - JWT
-  const token = jwt.sign({ id: newUser._id }, config.jwtSecret as string, {
+  const token = jwt.sign({ sub: newUser._id }, config.jwtSecret as string, {
     expiresIn: "7d",
   });
 
@@ -74,7 +74,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    const token = jwt.sign({ id: user._id }, config.jwtSecret as string, {
+    const token = jwt.sign({ sub: user._id }, config.jwtSecret as string, {
       expiresIn: "7d",
     });
 
