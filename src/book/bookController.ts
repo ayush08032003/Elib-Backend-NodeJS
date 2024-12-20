@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import cloudinary from "../config/cloudinary";
 import createHttpError from "http-errors";
 import bookModel from "./bookModel";
+import { CustomRequest } from "../middlwares/authenticate";
 
 const bookRegister = async (
   req: Request,
@@ -49,11 +50,15 @@ const bookRegister = async (
     );
 
     // console.log("bookFileUploadResult", bookFileUploadResult);
+    // Fetch UserId using authenticate middleware.
 
-    // make data like file url and cover url stores in Database.
+    const author = (req as CustomRequest).userId;
+
+    // Create Data - make data like file url and cover url stores in Database.
     const newBook = await bookModel.create({
       title,
       genre,
+      author,
       description,
       coverImage: uploadResult.secure_url,
       file: bookFileUploadResult.secure_url,
