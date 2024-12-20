@@ -4,7 +4,7 @@ import { IBook } from "./bookTypes";
 const bookSchema = new mongoose.Schema<IBook>(
   {
     title: { type: String, required: true },
-    author: { type: mongoose.Schema.ObjectId, required: true },
+    author: { type: mongoose.Types.ObjectId, required: true },
     coverImage: { type: String, required: true },
     file: { type: String, required: true },
     genre: { type: String, required: true },
