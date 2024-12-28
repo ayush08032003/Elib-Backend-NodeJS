@@ -86,4 +86,79 @@ const bookRegister = async (
   }
 };
 
-export { bookRegister };
+const updateBook = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { title, genre } = req.body;
+    const bookId = req.params.bookId;
+
+    if (!title || !genre) {
+      return next(createHttpError(400, "All Fields are Required"));
+    }
+
+    // Find Book in Database
+    const findBook = await bookModel.findOne({ _id: bookId });
+
+    // Check if Book is found
+    if (!findBook) {
+      return next(createHttpError(404, "Book Not Found"));
+    }
+
+    // Check if the author is the one who is updating the book.
+    if (findBook.author.toString() !== (req as CustomRequest).userId) {
+      return next(
+        createHttpError(403, "You are not allowed to update this book.")
+      );
+    }
+    console.log("FindBook: ", findBook);
+    let updatedBookCoverImgURL = findBook.coverImage;
+    // let updatedBookFileURL = findBook.file;
+
+    // Check if coverImage and new File is given to upload or not.
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    if (files && files.coverImage) {
+      console.log("Files : ", files);
+      const coverImageMimeType = files.coverImage[0].mimetype.split("/").at(-1);
+      // From multer, we get mineType: 'image/jpeg', but in cloudinary, we need mimeType: 'jpeg'
+
+      // For uploading the new cover image
+      const fileName = files.coverImage[0].filename;
+      const filePath = files.coverImage[0].path;
+
+      const uploadResult = await cloudinary.uploader.upload(filePath, {
+        filename_override: fileName,
+        folder: "book-covers",
+        format: coverImageMimeType,
+      });
+
+      // For deleting the old cover image from cloudinary
+      if (findBook.coverImage) {
+        // checking if there is an old cover image.
+        const coverImageUrl = findBook.coverImage;
+        const coverIdRegex = "/book-covers/([a-zA-Z0-9_-]+).jpg/";
+        const match = coverImageUrl.match(coverIdRegex);
+
+        if (match && match[1]) {
+          const coverId = "book-covers/" + match[1]; // Prepending 'book-covers/'
+          console.log(coverId);
+          // await cloudinary.uploader.destroy(coverId); // deleting coverImage from cloudinary.
+        } else {
+          return next(
+            createHttpError(
+              500,
+              "Error While Extracting Cover Image Id :: Not in Proper Format"
+            )
+          );
+        }
+      }
+
+      updatedBookCoverImgURL = uploadResult.secure_url; // for updating the cover image url in database.
+    }
+
+    res.status(200).json({ message: "Cover Image Updated Successfully" });
+    return;
+  } catch (error) {
+    return next(createHttpError(500, "Error While Updating Book"));
+  }
+};
+
+export { bookRegister, updateBook };
