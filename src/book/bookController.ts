@@ -109,14 +109,14 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
         createHttpError(403, "You are not allowed to update this book.")
       );
     }
-    console.log("FindBook: ", findBook);
+    // console.log("FindBook: ", findBook);
     let updatedBookCoverImgURL = findBook.coverImage;
-    // let updatedBookFileURL = findBook.file;
+    let updatedBookFileURL = findBook.file;
 
     // Check if coverImage and new File is given to upload or not.
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     if (files && files.coverImage) {
-      console.log("Files : ", files);
+      // console.log("Files : ", files);
       const coverImageMimeType = files.coverImage[0].mimetype.split("/").at(-1);
       // From multer, we get mineType: 'image/jpeg', but in cloudinary, we need mimeType: 'jpeg'
 
@@ -134,7 +134,7 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
       if (findBook.coverImage) {
         // checking if there is an old cover image.
         const coverImageUrl = findBook.coverImage;
-        const coverIdRegex = "/book-covers/([a-zA-Z0-9_-]+).jpg/";
+        const coverIdRegex = /book-covers\/([a-zA-Z0-9_-]+)\.jpg/;
         const match = coverImageUrl.match(coverIdRegex);
 
         if (match && match[1]) {
@@ -152,6 +152,43 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
       }
 
       updatedBookCoverImgURL = uploadResult.secure_url; // for updating the cover image url in database.
+    }
+
+    // Check if the book file is given to upload or not.
+    if (files && files.file) {
+      const mineType = files.file[0].mimetype.split("/").at(-1);
+
+      const fileName = files.file[0].filename;
+      const filePath = files.file[0].path;
+
+      const bookFileUploadResult = await cloudinary.uploader.upload(filePath, {
+        resource_type: "raw",
+        filename_override: fileName,
+        folder: "book-pdfs",
+        format: mineType,
+      });
+
+      // For deleting Old Book File from Cloudinary.. !
+      if (findBook.file) {
+        const coverImageUrl = findBook.file;
+        const coverIdRegex = /book-pdfs\/([a-zA-Z0-9_-]+)\.pdf/;
+        const match = coverImageUrl.match(coverIdRegex);
+
+        if (match && match[1]) {
+          const coverId = "book-pdfs/" + match[1]; // Prepending 'book-covers/'
+          console.log(coverId);
+          // await cloudinary.uploader.destroy(coverId); // deleting coverImage from cloudinary.
+        } else {
+          return next(
+            createHttpError(
+              500,
+              "Error While Extracting Book Pdf ID :: Not in Proper Format"
+            )
+          );
+        }
+      }
+
+      updatedBookFileURL = bookFileUploadResult.secure_url;
     }
 
     res.status(200).json({ message: "Cover Image Updated Successfully" });
