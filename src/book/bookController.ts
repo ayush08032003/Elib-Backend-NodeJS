@@ -81,7 +81,7 @@ const bookRegister = async (
       .status(201)
       .json({ message: "Book Registered Successfully", id: newBook._id });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     next(createHttpError(500, "Error While Uploading Book & Cover Image"));
   }
 };
@@ -134,13 +134,22 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
       if (findBook.coverImage) {
         // checking if there is an old cover image.
         const coverImageUrl = findBook.coverImage;
-        const coverIdRegex = /book-covers\/([a-zA-Z0-9_-]+)\.jpg/;
+        const coverIdRegex =
+          /book-covers\/([a-zA-Z0-9_-]+)\.(jpg|jpeg|png|gif|bmp|webp)$/;
         const match = coverImageUrl.match(coverIdRegex);
+
+        // console.log("Match", match);
 
         if (match && match[1]) {
           const coverId = "book-covers/" + match[1]; // Prepending 'book-covers/'
-          console.log(coverId);
-          // await cloudinary.uploader.destroy(coverId); // deleting coverImage from cloudinary.
+          // console.log(coverId);
+          try {
+            await cloudinary.uploader.destroy(coverId); // deleting coverImage from cloudinary.
+          } catch (error) {
+            next(
+              createHttpError(500, "Error while Deleting Cover Image Online.!")
+            );
+          }
         } else {
           return next(
             createHttpError(
@@ -152,6 +161,7 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
       }
 
       updatedBookCoverImgURL = uploadResult.secure_url; // for updating the cover image url in database.
+
       try {
         await fs.promises.unlink(filePath); // delete the file from the local storage.
       } catch (error) {
@@ -161,6 +171,7 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
             "Error While Deleting CoverImage from Local Storage..!"
           )
         );
+        return;
       }
     }
 
@@ -180,21 +191,28 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
 
       // For deleting Old Book File from Cloudinary.. !
       if (findBook.file) {
-        const coverImageUrl = findBook.file;
-        const coverIdRegex = /book-pdfs\/([a-zA-Z0-9_-]+)\.pdf/;
-        const match = coverImageUrl.match(coverIdRegex);
+        const pdfUrl = findBook.file;
+        const pdfIdRegex = /book-pdfs\/([a-zA-Z0-9_-]+)\.pdf/;
+        const match = pdfUrl.match(pdfIdRegex);
 
         if (match && match[1]) {
-          const coverId = "book-pdfs/" + match[1] + ".pdf"; // Prepending 'book-covers/'
-          console.log(coverId);
-          // await cloudinary.uploader.destroy(coverId); // deleting coverImage from cloudinary.
+          const pdfId = "book-pdfs/" + match[1] + ".pdf"; // Prepending 'book-covers/'
+          // console.log(pdfId);
+          try {
+            await cloudinary.uploader.destroy(pdfId, { resource_type: "raw" }); // this resource_type: "raw" is necessary..!
+            // deleting coverImage from cloudinary.
+          } catch (error) {
+            next(createHttpError(500, "Error While Deleting PDF Online"));
+            return;
+          }
         } else {
-          return next(
+          next(
             createHttpError(
               500,
               "Error While Extracting Book Pdf ID :: Not in Proper Format"
             )
           );
+          return;
         }
       }
 
@@ -208,13 +226,40 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
             "Error while Deleting Book PDF from Server Local Storage..!"
           )
         );
+        return;
       }
     }
 
-    res.status(200).json({ message: "Cover Image Updated Successfully" });
+    try {
+      // console.log("UpdatedBookCoverImgURL", updatedBookCoverImgURL);
+      // console.log("updatedBookFileURL", updatedBookFileURL);
+      const updatedBookObject = await bookModel.findByIdAndUpdate(
+        bookId,
+        {
+          title: title,
+          genre: genre,
+          coverImage: updatedBookCoverImgURL,
+          file: updatedBookFileURL,
+        },
+        { new: true } // this will return the updated result to updatedBook constant.
+      );
+
+      res.status(200).json({
+        message: "Cover Image Updated Successfully",
+        updatedBookObject: JSON.parse(JSON.stringify(updatedBookObject)),
+      });
+      return;
+    } catch (error) {
+      // console.log(error);
+      next(
+        createHttpError(500, "Error While Updating Book - findOneAndUpdate")
+      );
+      return;
+    }
     return;
   } catch (error) {
-    return next(createHttpError(500, "Error While Updating Book"));
+    next(createHttpError(500, "Error While Updating Book"));
+    return;
   }
 };
 
