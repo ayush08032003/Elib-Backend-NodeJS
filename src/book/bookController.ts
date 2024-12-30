@@ -152,6 +152,16 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
       }
 
       updatedBookCoverImgURL = uploadResult.secure_url; // for updating the cover image url in database.
+      try {
+        await fs.promises.unlink(filePath); // delete the file from the local storage.
+      } catch (error) {
+        next(
+          createHttpError(
+            500,
+            "Error While Deleting CoverImage from Local Storage..!"
+          )
+        );
+      }
     }
 
     // Check if the book file is given to upload or not.
@@ -175,7 +185,7 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
         const match = coverImageUrl.match(coverIdRegex);
 
         if (match && match[1]) {
-          const coverId = "book-pdfs/" + match[1]; // Prepending 'book-covers/'
+          const coverId = "book-pdfs/" + match[1] + ".pdf"; // Prepending 'book-covers/'
           console.log(coverId);
           // await cloudinary.uploader.destroy(coverId); // deleting coverImage from cloudinary.
         } else {
@@ -189,6 +199,16 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
       }
 
       updatedBookFileURL = bookFileUploadResult.secure_url;
+      try {
+        await fs.promises.unlink(filePath);
+      } catch (error) {
+        next(
+          createHttpError(
+            500,
+            "Error while Deleting Book PDF from Server Local Storage..!"
+          )
+        );
+      }
     }
 
     res.status(200).json({ message: "Cover Image Updated Successfully" });
