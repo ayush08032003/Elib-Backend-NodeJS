@@ -1,6 +1,6 @@
 # **Book Management System API**
 
-# **Index**
+## **Index**
 
 1. [Project Overview](#project-overview)
    - [Key Features](#key-features)
