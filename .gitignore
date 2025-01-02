@@ -1,6 +1,7 @@
 # Logs
 logs
 public
+README_SAMPLE.md
 personalNotest.txt
 *.log
 npm-debug.log*
