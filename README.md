@@ -1,5 +1,45 @@
 # **Book Management System API**
 
+# **Index**
+
+1. [Project Overview](#project-overview)
+   - [Key Features](#key-features)
+   
+2. [Technologies Used](#technologies-used)
+   
+3. [Installation Instructions](#installation-instructions)
+   - [Prerequisites](#prerequisites)
+   - [Steps to Install](#steps-to-install)
+   
+4. [API Endpoints](#api-endpoints)
+   - [User Endpoints](#user-endpoints)
+     - [POST `/api/users/register`](#post-apiusersregister)
+     - [POST `/api/users/login`](#post-apiuserslogin)
+   - [Book Endpoints](#book-endpoints)
+     - [POST `/api/books/register`](#post-apibooksregister)
+     - [PATCH `/api/books/:bookId`](#patch-apibooksbookid)
+     - [GET `/api/books`](#get-apibooks)
+     - [GET `/api/books/:bookId`](#get-apibooksbookid)
+     - [DELETE `/api/books/:bookId`](#delete-apibooksbookid)
+   
+5. [Authentication](#authentication)
+   - [JWT Token Authentication](#jwt-token-authentication)
+   
+6. [Error Handling](#error-handling)
+   - [Common Errors](#common-errors)
+   
+7. [File Storage (Cloudinary)](#file-storage-cloudinary)
+   
+8. [Testing](#testing)
+   - [Example Test Workflow](#example-test-workflow)
+   
+9. [Contributing](#contributing)
+   
+10. [Acknowledgments](#acknowledgments)
+   
+11. [Future Plans](#future-plans)
+
+
 ## **Project Overview**
 
 The **Book Management System API** is a backend service built using **Node.js** and **Express.js** designed to manage books within a digital library. It provides essential functionality for user registration, authentication, and CRUD (Create, Read, Update, Delete) operations on books. Additionally, the system integrates with **Cloudinary** for efficient file management, allowing users to upload and manage book covers and book files (e.g., PDFs or ePubs).
