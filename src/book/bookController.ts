@@ -299,4 +299,93 @@ const getSingleBook = async (
   }
 };
 
-export { bookRegister, updateBook, listBooks, getSingleBook };
+const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const bookId = req.params.bookId;
+    const bookData = await bookModel.findOne({ _id: bookId });
+    // console.log("BookData", bookData);
+    // console.log((req as CustomRequest).userId);
+
+    if (!bookData) {
+      // no book regarding this data has been found..!
+      next(createHttpError(404, "Book Not Found..!"));
+      return;
+    }
+
+    if (bookData.author.toString() !== (req as CustomRequest).userId) {
+      next(
+        createHttpError(403, "You are not Authorized to Delete this book..!")
+      );
+      return;
+    }
+
+    // For deleting book Cover Image if there's any...
+    if (bookData.coverImage) {
+      // checking if there is an old cover image.
+      const coverImageUrl = bookData.coverImage;
+      const coverIdRegex =
+        /book-covers\/([a-zA-Z0-9_-]+)\.(jpg|jpeg|png|gif|bmp|webp)$/;
+      const match = coverImageUrl.match(coverIdRegex);
+
+      // console.log("Match", match);
+
+      if (match && match[1]) {
+        const coverId = "book-covers/" + match[1]; // Prepending 'book-covers/'
+        // console.log(coverId);
+        try {
+          await cloudinary.uploader.destroy(coverId); // deleting coverImage from cloudinary.
+        } catch (error) {
+          next(
+            createHttpError(500, "Error while Deleting Cover Image Online.!")
+          );
+        }
+      } else {
+        return next(
+          createHttpError(
+            500,
+            "Error While Extracting Cover Image Id :: Not in Proper Format"
+          )
+        );
+      }
+    }
+
+    // for deleting book file from cloudinary if there's any..
+    if (bookData.file) {
+      const pdfUrl = bookData.file;
+      const pdfIdRegex = /book-pdfs\/([a-zA-Z0-9_-]+)\.pdf/;
+      const match = pdfUrl.match(pdfIdRegex);
+
+      if (match && match[1]) {
+        const pdfId = "book-pdfs/" + match[1] + ".pdf"; // Prepending 'book-covers/'
+        // console.log(pdfId);
+        try {
+          await cloudinary.uploader.destroy(pdfId, { resource_type: "raw" }); // this resource_type: "raw" is necessary..!
+          // deleting coverImage from cloudinary.
+        } catch (error) {
+          next(createHttpError(500, "Error While Deleting PDF Online"));
+          return;
+        }
+      } else {
+        next(
+          createHttpError(
+            500,
+            "Error While Extracting Book Pdf ID :: Not in Proper Format"
+          )
+        );
+        return;
+      }
+    }
+
+    const bookDelete = await bookModel.deleteOne({ _id: bookId });
+
+    res.status(200).json(bookDelete);
+    return;
+  } catch (error) {
+    console.log(error);
+    next(createHttpError(500, "Something Unexpected Happened..!"));
+    return;
+  }
+  return; // never reachable..
+};
+
+export { bookRegister, updateBook, listBooks, getSingleBook, deleteBook };
