@@ -1,10 +1,16 @@
 import express, { NextFunction, Request, Response } from "express";
-import createHttpError from "http-errors";
+import cors from "cors";
 import globalErrorHandler from "./middlwares/globalErrorHandler";
 import userRouter from "./user/userRouter";
 import bookRouter from "./book/bookRouter";
+import { config } from "./config/config";
 const app = express();
 app.use(express.json()); // this is neccessary as , without it, req.body will remains undefined.
+app.use(
+  cors({
+    origin: config.fontend_domain,
+  })
+);
 
 // Routes..
 // HTTP MEHTODS: GET,  POST, PUT, DELETE, PATCH etc..
