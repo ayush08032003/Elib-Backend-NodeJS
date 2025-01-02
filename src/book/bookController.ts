@@ -6,6 +6,20 @@ import createHttpError from "http-errors";
 import bookModel from "./bookModel";
 import { CustomRequest } from "../middlwares/authenticate";
 
+
+/**
+ * Registers a new book by uploading its cover image and PDF file to Cloudinary, 
+ * and saving the book details in the database.
+ * 
+ * @param {Request} req - The incoming HTTP request, containing the book data and files.
+ * @param {Response} res - The outgoing HTTP response, with a success message or error.
+ * @param {NextFunction} next - The next middleware function in case of an error.
+ * 
+ * @throws {HttpError} 400 - If any required fields (title, genre, files) are missing.
+ * @throws {HttpError} 500 - If an error occurs during file upload or deletion.
+ * 
+ * @returns {void} Sends a response with a success message and the new book's ID.
+ */
 const bookRegister = async (
   req: Request,
   res: Response,
@@ -86,6 +100,21 @@ const bookRegister = async (
   }
 };
 
+/**
+ * Updates the details of an existing book, including title, genre, cover image, and PDF file.
+ * If new files are provided, they are uploaded to Cloudinary, and old files are deleted.
+ * 
+ * @param {Request} req - The incoming HTTP request, containing the updated book data and files.
+ * @param {Response} res - The outgoing HTTP response, with a success message or error.
+ * @param {NextFunction} next - The next middleware function in case of an error.
+ * 
+ * @throws {HttpError} 400 - If required fields (title, genre) are missing.
+ * @throws {HttpError} 404 - If the book with the given ID is not found.
+ * @throws {HttpError} 403 - If the user is not authorized to update the book.
+ * @throws {HttpError} 500 - If any errors occur during file upload, file deletion, or database update.
+ * 
+ * @returns {void} Sends a response with a success message and the updated book details.
+ */
 const updateBook = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, genre } = req.body;
@@ -263,6 +292,17 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+/**
+ * Retrieves a list of all books from the database.
+ * 
+ * @param {Request} req - The incoming HTTP request, used for receiving parameters (not used in this function).
+ * @param {Response} res - The outgoing HTTP response, sending the list of books or an error message.
+ * @param {NextFunction} next - The next middleware function in case of an error.
+ * 
+ * @throws {HttpError} 500 - If an error occurs while retrieving the books from the database.
+ * 
+ * @returns {void} Sends a JSON response with the list of books.
+ */
 const listBooks = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // todo: Can Add pagination for better results.
@@ -278,6 +318,18 @@ const listBooks = async (req: Request, res: Response, next: NextFunction) => {
   return;
 };
 
+/**
+ * Retrieves a single book's details by its ID from the database.
+ * 
+ * @param {Request} req - The incoming HTTP request, containing the book ID in the parameters.
+ * @param {Response} res - The outgoing HTTP response, sending the book details or an error message.
+ * @param {NextFunction} next - The next middleware function in case of an error.
+ * 
+ * @throws {HttpError} 404 - If the book with the given ID is not found.
+ * @throws {HttpError} 500 - If an error occurs while retrieving the book from the database.
+ * 
+ * @returns {void} Sends a JSON response with the book details or an error message.
+ */
 const getSingleBook = async (
   req: Request,
   res: Response,
@@ -299,6 +351,26 @@ const getSingleBook = async (
   }
 };
 
+/**
+ * Deletes a book from the database, including its cover image and associated file from Cloudinary, if the user is authorized.
+ * 
+ * @param {Request} req - The incoming HTTP request containing the `bookId` parameter in the URL.
+ * @param {Response} res - The outgoing HTTP response, which will contain the result of the delete operation.
+ * @param {NextFunction} next - The next middleware function, used to handle errors or pass control to the next middleware.
+ * 
+ * @returns {void} Responds with a JSON object indicating the success of the delete operation.
+ * 
+ * @throws {HttpError} 404 - If the book is not found in the database.
+ * @throws {HttpError} 403 - If the user is not authorized to delete the book.
+ * @throws {HttpError} 500 - If there is an error during the deletion process (either database or Cloudinary).
+ * 
+ * @example
+ * Sample response when the book is successfully deleted:
+ * {
+ *   "acknowledged": true,
+ *   "deletedCount": 1
+ * }
+ */
 const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const bookId = req.params.bookId;
